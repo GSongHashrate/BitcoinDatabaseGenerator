@@ -1,0 +1,943 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>BitcoinBlockchain</name>
+    </assembly>
+    <members>
+        <member name="T:BitcoinBlockchain.Parser.ByteArrayExtension">
+            <summary>
+            Contains methods extending the byte[] type.
+            </summary>
+        </member>
+        <member name="M:BitcoinBlockchain.Parser.ByteArrayExtension.ReverseByteArray(System.Byte[])">
+            <summary>
+            Reverses the given byte array and returns a reference to it
+            Note that the content of the original byte array is changed.
+            </summary>
+            <param name="byteArray">
+            The byte array that will be reversed.
+            </param>
+            <returns>
+            A reference to the byte array parameter that was provided.
+            Note that this is not a reference to a new byte array, it is a reference
+            to the same byte array that was provided and that at return time has its 
+            content reversed.
+            </returns>
+        </member>
+        <member name="T:BitcoinBlockchain.Parser.BinaryReaderExtension">
+            <summary>
+            Provides extension methods for the <see cref="T:System.IO.BinaryReader"/> class.
+            </summary>
+        </member>
+        <member name="M:BitcoinBlockchain.Parser.BinaryReaderExtension.SkipZeroBytes(System.IO.BinaryReader)">
+            <summary>
+            Skips all bytes with a value of 0. Advances the current position of the stream 
+            to a position just before the next non zero byte or until the end of the file is reached.
+            </summary>
+            <param name="binaryReader">
+            Provides access to a Bitcoin blockchain file.
+            </param>
+            <returns>
+            true  - All the bytes with zero value were skipped and there is more data in the file.
+            false - All the bytes with zero value were skipped and the end of file was reached.
+            </returns>
+        </member>
+        <member name="T:BitcoinBlockchain.Parser.BlockchainParser">
+            <summary>
+            This class implements the IBlockchainParser interface. 
+            It parses and effectively processes a set of real Bitcoin blockchain streams.
+            </summary>
+        </member>
+        <member name="F:BitcoinBlockchain.Parser.BlockchainParser.BlockFileSelector">
+            <summary>
+            The file selector used to filter the blockchain files in the Bitcoin blockchain folder.
+            </summary>
+        </member>
+        <member name="F:BitcoinBlockchain.Parser.BlockchainParser.ExpectedBlockHeaderBufferSize">
+            <summary>
+            The expected size for the block header section of a block.
+            </summary>
+        </member>
+        <member name="F:BitcoinBlockchain.Parser.BlockchainParser.DefaultBlockMagicId">
+            <summary>
+            The "magic" ID of each Bitcoin block.
+            </summary>
+        </member>
+        <member name="F:BitcoinBlockchain.Parser.BlockchainParser.blockchainFilesEnumerator">
+            <summary>
+            An enumerable providing access to a set of BlockchainFile instances, each representing a Bitcoin blockchain file.
+            </summary>
+        </member>
+        <member name="F:BitcoinBlockchain.Parser.BlockchainParser.blockMagicId">
+            <summary>
+            The "magic" ID of each Bitcoin block.
+            </summary>
+        </member>
+        <member name="M:BitcoinBlockchain.Parser.BlockchainParser.#ctor(System.String)">
+            <summary>
+            Initializes a new instance of the <see cref="T:BitcoinBlockchain.Parser.BlockchainParser" /> class.
+            </summary>
+            <param name="blockchainPath">
+            The path to the folder containing the blockchain files.
+            </param>
+            <exception cref="T:BitcoinBlockchain.Parser.InvalidBlockchainFilesException">
+            Thrown when the list of Bitcoin blockchain files is found to be invalid.
+            The blockchain folder must contain files named with the pattern "blkxxxxx.dat", 
+            starting from "blk00000.dat" and with no gaps in the numeric section.
+            Note that this exception is referring only to the file names and not to the files content.
+            </exception>
+        </member>
+        <member name="M:BitcoinBlockchain.Parser.BlockchainParser.#ctor(System.String,System.String)">
+            <summary>
+            Initializes a new instance of the <see cref="T:BitcoinBlockchain.Parser.BlockchainParser" /> class.
+            </summary>
+            <param name="blockchainPath">
+            The path to the folder containing the blockchain files.
+            </param>
+            <param name="firstBlockchainFileName">
+            The name of the first blockchain file that should be processed from the series of blockchain files. 
+            In the list of blockchain files ordered by name, any blockchain file that appears prior
+            to the file specified by this parameter will be ignored.
+            If null then all file from the series of blockchain files will be processed.
+            </param>
+            <exception cref="T:BitcoinBlockchain.Parser.InvalidBlockchainFilesException">
+            Thrown when the list of Bitcoin blockchain files is found to be invalid.
+            The blockchain folder must contain files named with the pattern "blkxxxxx.dat", 
+            starting from "blk00000.dat" and with no gaps in the numeric section.
+            Note that this exception is referring only to the file names and not to the files content.
+            </exception>
+        </member>
+        <member name="M:BitcoinBlockchain.Parser.BlockchainParser.#ctor(System.Collections.Generic.IEnumerable{BitcoinBlockchain.Data.BlockchainFile})">
+            <summary>
+            Initializes a new instance of the <see cref="T:BitcoinBlockchain.Parser.BlockchainParser" /> class.
+            </summary>
+            <param name="blockchainFilesEnumerator">
+            An enumerable providing access to a set of BlockchainFile instances, each representing a Bitcoin blockchain file.
+            </param>
+        </member>
+        <member name="M:BitcoinBlockchain.Parser.BlockchainParser.SetBlockId(System.UInt32)">
+            <summary>
+            Sets the value that will be used to check against the BlockId of each block.
+            If this method is not called then the default value of 0xD9B4BEF9 will be used.
+            </summary>
+            <param name="blockId">The value that will be used to check against the BlockId of each block.</param>
+        </member>
+        <member name="M:BitcoinBlockchain.Parser.BlockchainParser.ParseBlockchain">
+            <summary>
+            Parses the Bitcoin blockchain and returns a <see cref="T:System.Collections.Generic.IEnumerable`1"/>.
+            Each element contains information about one Bitcoin block.
+            </summary>
+            <returns>
+            A <see cref="T:System.Collections.Generic.IEnumerable`1"/>.
+            Each element contains information about one Bitcoin block.
+            </returns>
+        </member>
+        <member name="M:BitcoinBlockchain.Parser.BlockchainParser.ParseBlockHeader(BitcoinBlockchain.Parser.BlockMemoryStreamReader)">
+            <summary>
+            Parses a Bitcoin block header.
+            </summary>
+            <param name="blockMemoryStreamReader">
+            Provides access to a section of the Bitcoin blockchain file.
+            </param>
+            <returns>
+            The block header information.
+            </returns>
+            <exception cref="T:BitcoinBlockchain.Parser.InvalidBlockchainContentException">
+            Thrown if the block version is unknown.
+            </exception>
+        </member>
+        <member name="M:BitcoinBlockchain.Parser.BlockchainParser.ParseTransactionInput(BitcoinBlockchain.Parser.BlockMemoryStreamReader)">
+            <summary>
+            Parses a Bitcoin transaction input.
+            </summary>
+            <param name="blockMemoryStreamReader">
+            Provides access to a section of the Bitcoin blockchain file.
+            </param>
+            <returns>
+            The Bitcoin transaction input that was parsed.
+            </returns>
+        </member>
+        <member name="M:BitcoinBlockchain.Parser.BlockchainParser.ParseTransactionOutput(BitcoinBlockchain.Parser.BlockMemoryStreamReader)">
+            <summary>
+            Parses a Bitcoin transaction output.
+            </summary>
+            <param name="blockMemoryStreamReader">
+            Provides access to a section of the Bitcoin blockchain file.
+            </param>
+            <returns>
+            The Bitcoin transaction output that was parsed.
+            </returns>
+        </member>
+        <member name="M:BitcoinBlockchain.Parser.BlockchainParser.ParseTransaction(BitcoinBlockchain.Parser.BlockMemoryStreamReader)">
+            <summary>
+            Parses a Bitcoin transaction.
+            </summary>
+            <param name="blockMemoryStreamReader">
+            Provides access to a section of the Bitcoin blockchain file.
+            </param>
+            <returns>
+            The Bitcoin transaction that was parsed.
+            </returns>
+        </member>
+        <member name="M:BitcoinBlockchain.Parser.BlockchainParser.InternalParseBlockchainFile(System.String,BitcoinBlockchain.Parser.BlockMemoryStreamReader)">
+            <summary>
+            Parses one Bitcoin block except for a few fields before the actual block header.
+            </summary>
+            <param name="blockchainFileName">
+            The name of the blockchain file that contains the block being parsed.
+            </param>
+            <param name="blockMemoryStreamReader">
+            Provides access to a section of the Bitcoin blockchain file.
+            </param>
+        </member>
+        <member name="M:BitcoinBlockchain.Parser.BlockchainParser.GetFileInfoList(System.String,System.String)">
+            <summary>
+            Retrieves a list ordered by name of FileInfo instances representing all blockchain files that will be processed.
+            </summary>
+            <param name="blockchainPath">
+            The path to the folder containing the blockchain files.
+            </param>
+            <param name="firstBlockchainFileName">
+            The name of the first blockchain file that should be processed from the series of blockchain files.
+            In the list of blockchain files ordered by name, any blockchain file that appears prior
+            to the file specified by this parameter will be ignored.
+            </param>
+            <returns>
+            A list ordered by name of FileInfo instances representing all blockchain files that will be processed.
+            </returns>
+        </member>
+        <member name="M:BitcoinBlockchain.Parser.BlockchainParser.GetFileInfoList(System.String)">
+            <summary>
+            Retrieves a list ordered by name of FileInfo instances representing all blockchain files in the given path.
+            </summary>
+            <param name="blockchainPath">
+            The path to the folder containing the blockchain files.
+            </param>
+            <returns>
+            A list ordered by name of FileInfo instances representing all blockchain files in the given path.
+            </returns>
+        </member>
+        <member name="M:BitcoinBlockchain.Parser.BlockchainParser.ValidateBlockchainFiles(System.Collections.Generic.List{System.IO.FileInfo},System.String)">
+            <summary>
+            Validates the given list of file names.
+            </summary>
+            <param name="blockchainFiles">
+            A list ordered by name of FileInfo instances representing all blockchain files in the given path.
+            </param>
+            <param name="firstBlockchainFileName">
+            The name of the first blockchain file that should be processed from the series of blockchain files. 
+            </param>
+            <exception cref="T:BitcoinBlockchain.Parser.InvalidBlockchainFilesException">
+            Thrown when the list of Bitcoin blockchain files is found to be invalid.
+            The blockchain folder must contain files named with the pattern "blkxxxxx.dat", 
+            starting from "blk00000.dat" and with no gaps in the numeric section.
+            Note that this exception is referring only to the file names and not to the files content.
+            </exception>
+        </member>
+        <member name="M:BitcoinBlockchain.Parser.BlockchainParser.SelectFilesToProcess(System.Collections.Generic.IEnumerable{System.IO.FileInfo},System.String)">
+            <summary>
+            Retrieves the list of blockchain files that will have to be processed based on the list
+            of all blockchain files and the name of the blockchain file that must be processed first. 
+            </summary>
+            <param name="allBlockchainFiles">
+            The list ordered by name of all blockchain files found at the blockchain folder.
+            </param>
+            <param name="firstBlockchainFileName">
+            The name of the first blockchain file that should be processed from the series of blockchain files.
+            In the list of blockchain files ordered by name, any blockchain file that appears prior
+            to the file specified by this parameter will be ignored.
+            </param>
+            <returns>
+            The list ordered by name of all blockchain files that should be processed. 
+            In the list of blockchain files given any blockchain files 
+            that appear prior to the file specified by firstBlockchainFileName will be ignored.
+            </returns>
+        </member>
+        <member name="M:BitcoinBlockchain.Parser.BlockchainParser.GetBlockchainFiles(System.Collections.Generic.IEnumerable{System.IO.FileInfo})">
+            <summary>
+            Transforms an enumerable of instances of type <see cref="T:BitcoinBlockchain.Data.BlockchainFile"/> into an enumerable of type <see cref="T:BitcoinBlockchain.Data.BlockchainFile"/>.
+            </summary>
+            <param name="fileInfoList">
+            A list of files specifying all Bitcoin blockchain files that have to be converted in instances of type <see cref="T:BitcoinBlockchain.Data.BlockchainFile"/> class.
+            </param>
+            <returns>
+            An enumerable providing access to a set of <see cref="T:BitcoinBlockchain.Data.BlockchainFile"/> instances, each representing a Bitcoin blockchain file.
+            </returns>
+        </member>
+        <member name="M:BitcoinBlockchain.Parser.BlockchainParser.ParseBlockchainFile(System.String,System.IO.BinaryReader)">
+            <summary>
+            Parses one Bitcoin block.
+            </summary>
+            <param name="blockchainFileName">
+            The name of the blockchain file that contains the block being parsed.
+            </param>
+            <param name="binaryReader">
+            Provides access to a Bitcoin blockchain file.
+            </param>
+        </member>
+        <member name="M:BitcoinBlockchain.Parser.BlockchainParser.ParseBlockchainFile(BitcoinBlockchain.Data.BlockchainFile)">
+            <summary>
+            Parses one Bitcoin blockchain file.
+            </summary>
+            <param name="blockchainFile">
+            Contains information about and provides access to the Bitcoin blockchain file that needs to be parsed.
+            </param>
+            <returns>
+            An IEnumerable containing instances of class <see cref="T:BitcoinBlockchain.Data.Block"/> each storing data about one Bitcoin block.
+            </returns>
+        </member>
+        <member name="T:BitcoinBlockchain.Parser.BlockMemoryStreamReader">
+            <summary>
+            This class provides low level functionality used to read the content of a byte array that stores sections of a Bitcoin blockchain file.
+            </summary>
+        </member>
+        <member name="F:BitcoinBlockchain.Parser.BlockMemoryStreamReader.byteArray">
+            <summary>
+            The original byte array that is being wrapped by this instance of <see cref="T:BitcoinBlockchain.Parser.BlockMemoryStreamReader"/> class.
+            </summary>
+        </member>
+        <member name="F:BitcoinBlockchain.Parser.BlockMemoryStreamReader.memoryStream">
+            <summary>
+            The underlying memory stream created on top of the <c>byteArray</c> field.
+            </summary>
+        </member>
+        <member name="F:BitcoinBlockchain.Parser.BlockMemoryStreamReader.binaryReader">
+            <summary>
+            The underlying binary reader created on top of the <c>byteArray</c> field.
+            </summary>
+        </member>
+        <member name="M:BitcoinBlockchain.Parser.BlockMemoryStreamReader.#ctor(System.Byte[])">
+            <summary>
+            Initializes a new instance of the <see cref="T:BitcoinBlockchain.Parser.BlockMemoryStreamReader" /> class.
+            An instance created with this constructor is a wrapper over a byte array 
+            instance that provides access to section of a Bitcoin blockchain file.
+            </summary>
+            <param name="byteArray">
+            A byte array that provides access to section of a Bitcoin blockchain file.
+            </param>
+        </member>
+        <member name="P:BitcoinBlockchain.Parser.BlockMemoryStreamReader.BaseStream">
+            <summary>
+            Gets the stream that is used by this instance.
+            </summary>
+        </member>
+        <member name="M:BitcoinBlockchain.Parser.BlockMemoryStreamReader.Dispose">
+            <summary>
+            Implements the IDisposable pattern.
+            </summary>
+        </member>
+        <member name="M:BitcoinBlockchain.Parser.BlockMemoryStreamReader.GetBuffer">
+            <summary>
+            Returns the underlying byte array.
+            </summary>
+            <returns>The underlying byte array.</returns>
+        </member>
+        <member name="M:BitcoinBlockchain.Parser.BlockMemoryStreamReader.ReadByte">
+            <summary>
+            Wrapper over <c>BinaryReader.ReadByte</c>.
+            </summary>
+        </member>
+        <member name="M:BitcoinBlockchain.Parser.BlockMemoryStreamReader.ReadBytes(System.Int32)">
+            <summary>
+            Wrapper over <c>BinaryReader.ReadBytes</c>.
+            </summary>
+            <param name="count">
+            The number of bytes to read.
+            </param>
+        </member>
+        <member name="M:BitcoinBlockchain.Parser.BlockMemoryStreamReader.ReadUInt16">
+            <summary>
+            Wrapper over <c>binaryReader.ReadUInt16</c>
+            </summary>
+        </member>
+        <member name="M:BitcoinBlockchain.Parser.BlockMemoryStreamReader.ReadUInt32">
+            <summary>
+            Wrapper over <c>binaryReader.ReadUInt32</c>
+            </summary>
+        </member>
+        <member name="M:BitcoinBlockchain.Parser.BlockMemoryStreamReader.ReadUInt64">
+            <summary>
+            Wrapper over <c>binaryReader.ReadUInt64</c>
+            </summary>
+        </member>
+        <member name="M:BitcoinBlockchain.Parser.BlockMemoryStreamReader.SkipBytes(System.Int32)">
+            <summary>
+            Advances the position of the stream by the given number of bytes 
+            or until the end of the stream is reached.
+            </summary>
+            <param name="count">
+            The number of bytes to skip.
+            </param>
+        </member>
+        <member name="M:BitcoinBlockchain.Parser.BlockMemoryStreamReader.ReadVariableLengthInteger">
+            <summary>
+            Reads a variable length integer.
+            See: https://en.bitcoin.it/wiki/Protocol_specification#Variable_length_integer
+            </summary>
+        </member>
+        <member name="M:BitcoinBlockchain.Parser.BlockMemoryStreamReader.Dispose(System.Boolean)">
+            <summary>
+            Implements the IDisposable pattern.
+            </summary>
+            <param name="disposing">
+            True to perform cleanup, false otherwise.
+            </param>
+        </member>
+        <member name="T:BitcoinBlockchain.Parser.BlockProcessedEventArgs">
+            <summary>
+            The argument of the event raised after the processing of a Bitcoin block completes.
+            </summary>
+        </member>
+        <member name="M:BitcoinBlockchain.Parser.BlockProcessedEventArgs.#ctor(BitcoinBlockchain.Data.Block)">
+            <summary>
+            Initializes a new instance of the <see cref="T:BitcoinBlockchain.Parser.BlockProcessedEventArgs" /> class.
+            </summary>
+            <param name="block">
+            Contains data describing the block that was processed.
+            </param>
+        </member>
+        <member name="P:BitcoinBlockchain.Parser.BlockProcessedEventArgs.Block">
+            <summary>
+            Gets the data describing the block that was processed.
+            </summary>
+        </member>
+        <member name="T:BitcoinBlockchain.Parser.IBlockchainParser">
+            <summary>
+            The interface that defines the methods necessary to parse a Bitcoin blockchain.
+            </summary>
+        </member>
+        <member name="M:BitcoinBlockchain.Parser.IBlockchainParser.ParseBlockchain">
+            <summary>
+            Parses the Bitcoin blockchain and returns a <see cref="T:System.Collections.Generic.IEnumerable`1"/>.
+            Each element contains information about one Bitcoin block.
+            </summary>
+            <returns>
+            A <see cref="T:System.Collections.Generic.IEnumerable`1"/>.
+            Each element contains information about one Bitcoin block.
+            </returns>
+        </member>
+        <member name="M:BitcoinBlockchain.Parser.IBlockchainParser.SetBlockId(System.UInt32)">
+            <summary>
+            Sets the value that will be used to check against the BlockId of each block.
+            If this method is not called then the default value of 0xD9B4BEF9 will be used.
+            </summary>
+            <param name="blockId">The value that will be used to check against the BlockId of each block.</param>
+        </member>
+        <member name="T:BitcoinBlockchain.Parser.InvalidBlockchainFilesException">
+            <summary>
+            The exception that is thrown when the list of Bitcoin blockchain files is found to be invalid.
+            The blockchain folder must contain files named with the pattern "blkxxxxx.dat", 
+            starting from "blk00000.dat" and with no gaps in the numeric section.
+            Note that this exception is referring only to the file names and not to the files content.
+            </summary>
+        </member>
+        <member name="M:BitcoinBlockchain.Parser.InvalidBlockchainFilesException.#ctor">
+            <summary>
+            Initializes a new instance of the <see cref="T:BitcoinBlockchain.Parser.InvalidBlockchainFilesException"/> class.
+            </summary>
+        </member>
+        <member name="M:BitcoinBlockchain.Parser.InvalidBlockchainFilesException.#ctor(System.String)">
+            <summary>
+            Initializes a new instance of the <see cref="T:BitcoinBlockchain.Parser.InvalidBlockchainFilesException"/> class.
+            </summary>
+            <param name="message">
+            The message that describes the error.
+            </param>
+        </member>
+        <member name="M:BitcoinBlockchain.Parser.InvalidBlockchainFilesException.#ctor(System.String,System.Exception)">
+            <summary>
+            Initializes a new instance of the <see cref="T:BitcoinBlockchain.Parser.InvalidBlockchainFilesException"/> class.
+            </summary>
+            <param name="message">
+            The message that describes the error.
+            </param>
+            <param name="innerException">
+            The exception that is the cause of the current exception,
+            or a null reference if no inner exception is specified.
+            </param>
+        </member>
+        <member name="M:BitcoinBlockchain.Parser.InvalidBlockchainFilesException.#ctor(System.Runtime.Serialization.SerializationInfo,System.Runtime.Serialization.StreamingContext)">
+            <summary>
+            Initializes a new instance of the <see cref="T:BitcoinBlockchain.Parser.InvalidBlockchainFilesException"/> class with serialized data.
+            </summary>
+            <param name="info">
+            The System.Runtime.Serialization.SerializationInfo that holds the serialized data 
+            about this instance of the <see cref="T:BitcoinBlockchain.Parser.InvalidBlockchainFilesException"/> class.
+            </param>
+            <param name="context">
+            The System.Runtime.Serialization.StreamingContext that contains contextual information about the 
+            source or destination.
+            </param>
+        </member>
+        <member name="T:BitcoinBlockchain.Parser.UnknownBlockVersionException">
+            <summary>
+            The exception that is thrown when the Bitcoin blockchain contains blocks with a version that cannot be processed.
+            </summary>
+        </member>
+        <member name="M:BitcoinBlockchain.Parser.UnknownBlockVersionException.#ctor">
+            <summary>
+            Initializes a new instance of the <see cref="T:BitcoinBlockchain.Parser.UnknownBlockVersionException"/> class.
+            </summary>
+        </member>
+        <member name="M:BitcoinBlockchain.Parser.UnknownBlockVersionException.#ctor(System.String)">
+            <summary>
+            Initializes a new instance of the <see cref="T:BitcoinBlockchain.Parser.UnknownBlockVersionException"/> class.
+            </summary>
+            <param name="message">
+            The message that describes the error.
+            </param>
+        </member>
+        <member name="M:BitcoinBlockchain.Parser.UnknownBlockVersionException.#ctor(System.String,System.Exception)">
+            <summary>
+            Initializes a new instance of the <see cref="T:BitcoinBlockchain.Parser.UnknownBlockVersionException"/> class.
+            </summary>
+            <param name="message">
+            The message that describes the error.
+            </param>
+            <param name="innerException">
+            The exception that is the cause of the current exception,
+            or a null reference if no inner exception is specified.
+            </param>
+        </member>
+        <member name="M:BitcoinBlockchain.Parser.UnknownBlockVersionException.#ctor(System.Runtime.Serialization.SerializationInfo,System.Runtime.Serialization.StreamingContext)">
+            <summary>
+            Initializes a new instance of the <see cref="T:BitcoinBlockchain.Parser.UnknownBlockVersionException"/> class with serialized data.
+            </summary>
+            <param name="info">
+            The System.Runtime.Serialization.SerializationInfo that holds the serialized data 
+            about this instance of the <see cref="T:BitcoinBlockchain.Parser.UnknownBlockVersionException"/> class.
+            </param>
+            <param name="context">
+            The System.Runtime.Serialization.StreamingContext that contains contextual information about the 
+            source or destination.
+            </param>
+        </member>
+        <member name="T:BitcoinBlockchain.Parser.InvalidBlockchainContentException">
+            <summary>
+            The exception that is thrown when the content of the Bitcoin blockchain files is found to be invalid.
+            </summary>
+        </member>
+        <member name="M:BitcoinBlockchain.Parser.InvalidBlockchainContentException.#ctor">
+            <summary>
+            Initializes a new instance of the <see cref="T:BitcoinBlockchain.Parser.InvalidBlockchainContentException"/> class.
+            </summary>
+        </member>
+        <member name="M:BitcoinBlockchain.Parser.InvalidBlockchainContentException.#ctor(System.String)">
+            <summary>
+            Initializes a new instance of the <see cref="T:BitcoinBlockchain.Parser.InvalidBlockchainContentException"/> class.
+            </summary>
+            <param name="message">
+            The message that describes the error.
+            </param>
+        </member>
+        <member name="M:BitcoinBlockchain.Parser.InvalidBlockchainContentException.#ctor(System.String,System.Exception)">
+            <summary>
+            Initializes a new instance of the <see cref="T:BitcoinBlockchain.Parser.InvalidBlockchainContentException"/> class.
+            </summary>
+            <param name="message">
+            The message that describes the error.
+            </param>
+            <param name="innerException">
+            The exception that is the cause of the current exception,
+            or a null reference if no inner exception is specified.
+            </param>
+        </member>
+        <member name="M:BitcoinBlockchain.Parser.InvalidBlockchainContentException.#ctor(System.Runtime.Serialization.SerializationInfo,System.Runtime.Serialization.StreamingContext)">
+            <summary>
+            Initializes a new instance of the <see cref="T:BitcoinBlockchain.Parser.InvalidBlockchainContentException"/> class with serialized data.
+            </summary>
+            <param name="info">
+            The System.Runtime.Serialization.SerializationInfo that holds the serialized data 
+            about this instance of the <see cref="T:BitcoinBlockchain.Parser.InvalidBlockchainContentException"/> class.
+            </param>
+            <param name="context">
+            The System.Runtime.Serialization.StreamingContext that contains contextual information about the 
+            source or destination.
+            </param>
+        </member>
+        <member name="T:BitcoinBlockchain.Data.BlockchainFile">
+            <summary>
+            A class containing information about a Bitcoin blockchain file.
+            </summary>
+        </member>
+        <member name="M:BitcoinBlockchain.Data.BlockchainFile.#ctor(System.String,System.IO.BinaryReader)">
+            <summary>
+            Initializes a new instance of the <see cref="T:BitcoinBlockchain.Data.BlockchainFile" /> class.
+            </summary>
+            <param name="fileName">The name of the Bitcoin blockchain file.</param>
+            <param name="binaryReader">A stream that can be used to read the Bitcoin blockchain file.</param>
+        </member>
+        <member name="P:BitcoinBlockchain.Data.BlockchainFile.FileName">
+            <summary>
+            Gets the name of the Bitcoin blockchain file.
+            </summary>
+        </member>
+        <member name="P:BitcoinBlockchain.Data.BlockchainFile.BinaryReader">
+            <summary>
+            Gets a stream that can be used to read the Bitcoin blockchain file.
+            </summary>
+        </member>
+        <member name="T:BitcoinBlockchain.Data.BlockHeader">
+            <summary>
+            Contains information about a Bitcoin block header.
+            For more information see: https://en.bitcoin.it/wiki/Block_hashing_algorithm
+            </summary>
+        </member>
+        <member name="P:BitcoinBlockchain.Data.BlockHeader.BlockVersion">
+            <summary>
+            Gets or sets the block version number.
+            </summary>
+        </member>
+        <member name="P:BitcoinBlockchain.Data.BlockHeader.BlockHash">
+            <summary>
+            Gets or sets the 256-bit hash of this block header.
+            This ByteArray instance contains the hash in reverse order from what is the 
+            normal result of hashing. This is to be consistent with sites like
+            blockchain.info and blockexporer that display hashes in 'big endian' format.
+            </summary>
+        </member>
+        <member name="P:BitcoinBlockchain.Data.BlockHeader.PreviousBlockHash">
+            <summary>
+            Gets or sets the 256-bit hash of the previous active block header.
+            This ByteArray instance contains the hash in reverse order from what is the 
+            normal result of hashing. This is to be consistent with sites like
+            blockchain.info and blockexporer that display hashes in 'big endian' format.
+            Note that stale blocks will be skipped. In other words a block following a
+            stale block will not have PreviousBlockHash indicating the stale block 
+            but the previous active block.
+            </summary>
+        </member>
+        <member name="P:BitcoinBlockchain.Data.BlockHeader.MerkleRootHash">
+            <summary>
+            Gets or sets the 256-bit hash based on all transactions in the block.
+            This ByteArray instance contains the hash in reverse order from what is the 
+            normal result of hashing. This is to be consistent with sites like
+            blockchain.info and blockexporer that display hashes in 'big endian' format.
+            </summary>
+        </member>
+        <member name="P:BitcoinBlockchain.Data.BlockHeader.BlockTimestampUnix">
+            <summary>
+            Gets or sets the block creation timestamp as seconds since 1970-01-01T00:00 UTC.
+            </summary>
+        </member>
+        <member name="P:BitcoinBlockchain.Data.BlockHeader.BlockTimestamp">
+            <summary>
+            Gets or sets the block creation timestamp.
+            </summary>
+        </member>
+        <member name="P:BitcoinBlockchain.Data.BlockHeader.BlockTargetDifficulty">
+            <summary>
+            Gets or sets the block target difficulty.
+            </summary>
+        </member>
+        <member name="P:BitcoinBlockchain.Data.BlockHeader.BlockNonce">
+            <summary>
+            Gets or sets the block nonce. 
+            See https://en.bitcoin.it/wiki/Nonce.
+            </summary>
+        </member>
+        <member name="T:BitcoinBlockchain.Data.Block">
+            <summary>
+            Contains information about a Bitcoin block.
+            For more information see: https://en.bitcoin.it/wiki/Block
+            </summary>
+        </member>
+        <member name="F:BitcoinBlockchain.Data.Block.transactions">
+            <summary>
+            The list of transactions in this Bitcoin block.
+            </summary>
+        </member>
+        <member name="M:BitcoinBlockchain.Data.Block.#ctor(System.String,BitcoinBlockchain.Data.BlockHeader)">
+            <summary>
+            Initializes a new instance of the <see cref="T:BitcoinBlockchain.Data.Block"/> class.
+            </summary>
+            <param name="blockchainFileName">
+            The name of the Bitcoin blockchain file that contains this block.
+            </param>
+            <param name="blockHeader">
+            The block header.
+            </param>
+        </member>
+        <member name="P:BitcoinBlockchain.Data.Block.BlockchainFileName">
+            <summary>
+            Gets the name of the blockchain file that contains the block being parsed.
+            </summary>
+        </member>
+        <member name="P:BitcoinBlockchain.Data.Block.PercentageOfCurrentBlockchainFile">
+            <summary>
+            Gets or sets a percentage indicating how much of the current blockchain file was processed.
+            </summary>
+        </member>
+        <member name="P:BitcoinBlockchain.Data.Block.BlockHeader">
+            <summary>
+            Gets the block header information.
+            </summary>
+        </member>
+        <member name="P:BitcoinBlockchain.Data.Block.Transactions">
+            <summary>
+            Gets the read-only collection of transactions in this Bitcoin block.
+            </summary>
+        </member>
+        <member name="P:BitcoinBlockchain.Data.Block.TransactionInputsCount">
+            <summary>
+            Gets the total count of the transaction inputs in this block.
+            </summary>
+        </member>
+        <member name="P:BitcoinBlockchain.Data.Block.TransactionOutputsCount">
+            <summary>
+            Gets the total count of the transaction outputs in this block.
+            </summary>
+        </member>
+        <member name="M:BitcoinBlockchain.Data.Block.AddTransaction(BitcoinBlockchain.Data.Transaction)">
+            <summary>
+            Adds a new transaction to the list of transactions.
+            </summary>
+            <param name="transaction">
+            The Bitcoin transaction to be added to the list of transactions.
+            </param>
+        </member>
+        <member name="T:BitcoinBlockchain.Data.ByteArray">
+            <summary>
+            An immutable class, wrapper to a byte array.
+            Because ByteArray implements GetHashCode and Equals based on the content of the byte array that is being wrapped, 
+            it can be used as a key in a dictionary. 
+            Note that the C# Array do not overwrite GetHashCode. Two byte arrays with identical content will 
+            generate different values for GetHashCode. That prevents a C# byte array from being used directly 
+            as a key in a dictionary. ByteArray can be used in that situation.
+            </summary>
+        </member>
+        <member name="F:BitcoinBlockchain.Data.ByteArray.Empty">
+            <summary>
+            A read-only instance of the ByteArray class whose byte array has zero length.
+            </summary>
+        </member>
+        <member name="F:BitcoinBlockchain.Data.ByteArray.byteArrayValue">
+            <summary>
+            The byte array that is wrapped by this instance.
+            </summary>
+        </member>
+        <member name="F:BitcoinBlockchain.Data.ByteArray.isHashCodeCalculated">
+            <summary>
+            Indicates whether the hash code was calculated yet or not.
+            </summary>
+        </member>
+        <member name="F:BitcoinBlockchain.Data.ByteArray.hashCode">
+            <summary>
+            Cached value for the result of GetHashCode. 
+            Having this allows us to avoid recalculating the hash code every time GetHashCode is called.
+            Note: initially we used a Lazy instance but the memory footprint for Lazy is too large so we 
+                  eventually replaced this with a simple integer and a boolean flag: isHashCodeCalculated.
+            </summary>
+        </member>
+        <member name="M:BitcoinBlockchain.Data.ByteArray.#ctor(System.Byte[])">
+            <summary>
+            Initializes a new instance of the <see cref="T:BitcoinBlockchain.Data.ByteArray"/> class.
+            </summary>
+            <param name="sourceByteArray">
+            The source byte array that will be wrapped by this <see cref="T:BitcoinBlockchain.Data.ByteArray"/> instance.
+            </param>
+        </member>
+        <member name="M:BitcoinBlockchain.Data.ByteArray.op_Equality(BitcoinBlockchain.Data.ByteArray,BitcoinBlockchain.Data.ByteArray)">
+            <summary>
+            Implements the "==" operator for class ByteArray.
+            </summary>
+            <param name="byteArray1">
+            An instance of type<see cref="T:BitcoinBlockchain.Data.ByteArray" />, the left operand of the comparison.
+            </param>
+            <param name="byteArray2">
+            An instance of type<see cref="T:BitcoinBlockchain.Data.ByteArray" />, the right operand of the comparison.
+            </param>
+            <returns>
+            True if the two instances of ByteArray store identical byte arrays; false otherwise.
+            </returns>
+        </member>
+        <member name="M:BitcoinBlockchain.Data.ByteArray.op_Inequality(BitcoinBlockchain.Data.ByteArray,BitcoinBlockchain.Data.ByteArray)">
+            <summary>
+            Implements the "!=" operator for class ByteArray.
+            </summary>
+            <param name="byteArray1">
+            An instance of type<see cref="T:BitcoinBlockchain.Data.ByteArray" />, the left operand of the comparison.
+            </param>
+            <param name="byteArray2">
+            An instance of type<see cref="T:BitcoinBlockchain.Data.ByteArray" />, the right operand of the comparison.
+            </param>
+            <returns>
+            False if the two instances of ByteArray store identical byte arrays; true otherwise.
+            </returns>
+        </member>
+        <member name="M:BitcoinBlockchain.Data.ByteArray.IsZeroArray">
+            <summary>
+            Determines if all the bytes in the byte array have value 0.
+            </summary>
+            <returns>
+            True if all the bytes in the byte array have value 0; false otherwise.
+            </returns>
+        </member>
+        <member name="M:BitcoinBlockchain.Data.ByteArray.Equals(System.Object)">
+            <summary>
+            Determines whether the specified object is equal to the "this" instance.
+            </summary>
+            <param name="obj">
+            The object to compare with the "this" instance.
+            </param>
+            <returns>
+            true if the specified object is equal to the "this" instance; otherwise, false.
+            </returns>
+        </member>
+        <member name="M:BitcoinBlockchain.Data.ByteArray.GetHashCode">
+            <summary>
+            Returns the hash code for this instance.
+            </summary>
+            <returns>
+            The hash code for this instance.
+            </returns>
+        </member>
+        <member name="M:BitcoinBlockchain.Data.ByteArray.ToArray">
+            <summary>
+            Returns a copy of the byte array that is being wrapped by this instance.
+            </summary>
+            <remarks>
+            We return a copy instead of the byte array field stored by this instance in order to ensure the immutability of this class.
+            </remarks>>
+            <returns>
+            A copy of the byte array that is being wrapped by this instance.
+            </returns>
+        </member>
+        <member name="M:BitcoinBlockchain.Data.ByteArray.ToString">
+            <summary>
+            Converts the numeric value of each element of the given 
+            byte array to its equivalent hexadecimal string representation.
+            </summary>
+            <returns>
+            A string of hexadecimal pairs, where each pair represents
+            a byte in the given byte array. For example, "00FF00AB".
+            </returns>
+        </member>
+        <member name="M:BitcoinBlockchain.Data.ByteArray.CalculateHashCode">
+            <summary>
+            Calculates the value for <c>GetHashCode()</c>.
+            </summary>
+            <returns>
+            The value for <c>GetHashCode()</c>.
+            </returns>
+        </member>
+        <member name="T:BitcoinBlockchain.Data.Transaction">
+            <summary>
+            Contains information about a Bitcoin transaction.
+            For more information see: https://en.bitcoin.it/wiki/Transaction
+            </summary>
+        </member>
+        <member name="F:BitcoinBlockchain.Data.Transaction.transactionInputs">
+            <summary>
+            The list of transaction inputs.
+            </summary>
+        </member>
+        <member name="F:BitcoinBlockchain.Data.Transaction.transactionOutputs">
+            <summary>
+            The list of transaction outputs.
+            </summary>
+        </member>
+        <member name="M:BitcoinBlockchain.Data.Transaction.#ctor">
+            <summary>
+            Initializes a new instance of the <see cref="T:BitcoinBlockchain.Data.Transaction" /> class.
+            </summary>
+        </member>
+        <member name="P:BitcoinBlockchain.Data.Transaction.TransactionHash">
+            <summary>
+            Gets or sets the 256 bit hash of this transaction.
+            The hash is calculated for the block of memory that contains the entire transaction, 
+            from transaction version number to the transaction lock time.
+            This ByteArray instance contains the hash in reverse order from what is the 
+            normal result of hashing. This is to be consistent with sites like
+            blockchain.info and blockexporer that display hashes in 'big endian' format.
+            </summary>
+        </member>
+        <member name="P:BitcoinBlockchain.Data.Transaction.TransactionVersion">
+            <summary>
+            Gets or sets the transaction version.
+            </summary>
+        </member>
+        <member name="P:BitcoinBlockchain.Data.Transaction.TransactionLockTime">
+            <summary>
+            Gets or sets the transaction lock time.
+            If non-zero and sequence numbers are less than 0xFFFFFFFF then it represents 
+            the block height or the timestamp when transaction is final.
+            </summary>
+        </member>
+        <member name="P:BitcoinBlockchain.Data.Transaction.Inputs">
+            <summary>
+            Gets the read-only collection of transaction inputs in this transaction.
+            </summary>
+        </member>
+        <member name="P:BitcoinBlockchain.Data.Transaction.Outputs">
+            <summary>
+            Gets the read-only collection of transaction outputs in this transaction.
+            </summary>
+        </member>
+        <member name="M:BitcoinBlockchain.Data.Transaction.AddInput(BitcoinBlockchain.Data.TransactionInput)">
+            <summary>
+            Adds a new input to the list of transaction inputs.
+            </summary>
+            <param name="transactionInput">
+            The transaction input to be added to the list of transaction inputs.
+            </param>
+        </member>
+        <member name="M:BitcoinBlockchain.Data.Transaction.AddOutput(BitcoinBlockchain.Data.TransactionOutput)">
+            <summary>
+            Adds a new output to the list of transaction outputs.
+            </summary>
+            <param name="transactionOutput">
+            The transaction output to be added to the list of transaction outputs.
+            </param>
+        </member>
+        <member name="T:BitcoinBlockchain.Data.TransactionInput">
+            <summary>
+            Contains information about a Bitcoin transaction input.
+            For more information see:
+            <c>https://en.bitcoin.it/wiki/Transaction#general_format_.28inside_a_block.29_of_each_input_of_a_transaction_-_Txin</c>
+            </summary>
+        </member>
+        <member name="F:BitcoinBlockchain.Data.TransactionInput.OutputIndexNotUsed">
+            <summary>
+            Value used for SourceTransactionOutputIndex to indicate that the input refers to no previous output.
+            </summary>
+        </member>
+        <member name="P:BitcoinBlockchain.Data.TransactionInput.InputScript">
+            <summary>
+            Gets or sets the input's script.
+            </summary>
+        </member>
+        <member name="P:BitcoinBlockchain.Data.TransactionInput.SourceTransactionHash">
+            <summary>
+            Gets or sets a double SHA256 hash that identifies the transaction that has the output that will be consumed by this input.
+            This ByteArray instance contains the hash in reverse order from what is the 
+            normal result of hashing. This is to be consistent with sites like
+            blockchain.info and blockexporer that display hashes in 'big endian' format.
+            </summary>
+        </member>
+        <member name="P:BitcoinBlockchain.Data.TransactionInput.SourceTransactionOutputIndex">
+            <summary>
+            Gets or sets the index of the output that will be consumed by this input.
+            The index is a zero based index in the list of outputs of the transaction that it belongs to.
+            It can be OutputIndexNotUsed to indicate that this input refers to no previous output.
+            </summary>
+        </member>
+        <member name="T:BitcoinBlockchain.Data.TransactionOutput">
+            <summary>
+            Contains information about a Bitcoin transaction output.
+            For more information see:
+            <c>https://en.bitcoin.it/wiki/Transaction#general_format_.28inside_a_block.29_of_each_output_of_a_transaction_-_Txout</c>
+            </summary>
+        </member>
+        <member name="P:BitcoinBlockchain.Data.TransactionOutput.OutputValueSatoshi">
+            <summary>
+            Gets or sets the value for this output in Satoshi.
+            </summary>
+        </member>
+        <member name="P:BitcoinBlockchain.Data.TransactionOutput.OutputScript">
+            <summary>
+            Gets or sets the output's script.
+            </summary>
+        </member>
+    </members>
+</doc>
