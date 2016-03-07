@@ -69,7 +69,8 @@ CREATE INDEX IX_BitcoinTransaction_BlockId ON BitcoinTransaction(BlockId)
 -- ==========================================================================
 CREATE TABLE TransactionInput (
     TransactionInputId              BIGINT PRIMARY KEY              NOT NULL,
-    BitcoinTransactionId            BIGINT                          NOT NULL,
+    InputScriptId					BIGINT							NOT NULL,
+	BitcoinTransactionId            BIGINT                          NOT NULL,
     
     -- This is the Id of the source transaction output.
     -- Set to NULL when this input has no corresponding output.
@@ -110,6 +111,7 @@ CREATE TABLE TransactionInputSource (
     -- transaction that it belongs to.
     -- Set to -1 to indicate that this input refers to no previous output.
     SourceTransactionOutputIndex    INT                             NULL,
+	InputScript						VARBINARY (MAX)					NOT NULL,
 );
 
 

@@ -39,8 +39,8 @@
     </AssemblyOriginatorKeyFile>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="BitcoinBlockchain, Version=1.2.1.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\BitcoinBlockchain.1.2.1.0\lib\net45\BitcoinBlockchain.dll</HintPath>
+    <Reference Include="BitcoinBlockchain, Version=1.2.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\BitcoinBlockchain.1.2.0.0\lib\net45\BitcoinBlockchain.dll</HintPath>
       <Private>True</Private>
     </Reference>
     <Reference Include="System" />
@@ -76,10 +76,18 @@
       <DesignTime>True</DesignTime>
       <DependentUpon>SummaryBlockDataSet.xsd</DependentUpon>
     </Compile>
+    <Compile Include="DataSets\TransactionInputDataSet.cs">
+      <DependentUpon>TransactionInputDataSet.xsd</DependentUpon>
+      <SubType>Component</SubType>
+    </Compile>
     <Compile Include="DataSets\TransactionInputDataSet.Designer.cs">
       <AutoGen>True</AutoGen>
       <DesignTime>True</DesignTime>
       <DependentUpon>TransactionInputDataSet.xsd</DependentUpon>
+    </Compile>
+    <Compile Include="DataSets\TransactionInputSourceDataSet.cs">
+      <DependentUpon>TransactionInputSourceDataSet.xsd</DependentUpon>
+      <SubType>Component</SubType>
     </Compile>
     <Compile Include="DataSets\TransactionInputSourceDataSet.Designer.cs">
       <AutoGen>True</AutoGen>
@@ -202,6 +210,7 @@
     </None>
     <None Include="DataSets\TransactionInputSourceDataSet.xsc">
       <DependentUpon>TransactionInputSourceDataSet.xsd</DependentUpon>
+      <SubType>Designer</SubType>
     </None>
     <None Include="DataSets\TransactionInputSourceDataSet.xsd">
       <SubType>Designer</SubType>

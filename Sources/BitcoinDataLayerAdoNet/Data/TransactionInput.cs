@@ -19,6 +19,7 @@ namespace BitcoinDataLayerAdoNet.Data
 
         public TransactionInput(
             long transactionInputId,
+            long inputScriptId,
             long bitcoinTransactionId,
             long? sourceTransactionOutputId)
         {

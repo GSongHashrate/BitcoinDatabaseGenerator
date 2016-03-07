@@ -16,11 +16,12 @@ namespace BitcoinDataLayerAdoNet.Data
     /// </summary>
     public class TransactionInputSource
     {
-        public TransactionInputSource(long transactionInputId, ByteArray sourceTransactionHash, int sourceTransactionOutputIndex)
+        public TransactionInputSource(long transactionInputId, ByteArray sourceTransactionHash, int sourceTransactionOutputIndex, ByteArray inputScript)
         {
             this.TransactionInputId = transactionInputId;
             this.SourceTransactionHash = sourceTransactionHash;
             this.SourceTransactionOutputIndex = sourceTransactionOutputIndex;
+            this.InputScript = inputScript;
         }
 
         public long TransactionInputId { get; private set; }
@@ -28,5 +29,7 @@ namespace BitcoinDataLayerAdoNet.Data
         public ByteArray SourceTransactionHash { get; private set; }
 
         public int SourceTransactionOutputIndex { get; private set; }
+
+        public ByteArray InputScript { get; private set; }
     }
 }
